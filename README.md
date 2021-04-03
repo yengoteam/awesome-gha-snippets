@@ -288,7 +288,7 @@ jobs:
 
 You can schedule a workflow, just like you do with crontab. If you have a long build and need to have a pre-release you need to have a prepared test stage to check the operability - you can schedule a launch at night so that everything is ready by the morning.
 
-**Note:** at the beginning of each hour a lot of assemblies are started, so it is better to set any non-zero start minutes so that there are no delays to start at peak loads.
+**Note:** at the beginning of each hour a lot of GitHub Actions workflow are started, so it is better to set any non-zero start minutes so that there are no delays to start at peak loads.
 
 ```yaml
 on:
