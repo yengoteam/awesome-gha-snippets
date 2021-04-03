@@ -20,6 +20,8 @@ A collection of useful snippets, all in one place.
   * [Publish Package on PyPI](#publish-package-on-pypi)
   * [Publish Docker Image](#publish-docker-image)
   * [Check PR Title](#check-pr-title)
+  * [Extract Task ID from Branch Name](#extract-task-id-from-branch-name)
+  * [Scheduled Events](#scheduled-events)
 
 ## 📌 Tips
 
@@ -258,3 +260,38 @@ r = new RegExp("^#\\d{1,}\\.");
 // Output: true
 ```
 </details>
+
+### Extract Task ID from Branch Name
+
+Check if the branch name corresponds to the rules and extract the task identifier.
+
+**Requirements:**
+1. The branch name must begin with a number, followed by a dash and a short description of the task. For example: `222-bump_reqs`.
+
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and Extract Task ID
+        id: task_id
+        run: |
+          TASK_ID=$(echo "${GITHUB_HEAD_REF}" | grep -o '^[0-9]*')
+          if [ "${TASK_ID}" == "" ] ; then
+            >&2 echo "Incorrect branch name. Must be like: 314-task_name"
+            exit 1
+          fi
+          echo "::set-output name=RESULT::${TASK_ID}"
+```
+
+### Scheduled Events
+
+You can schedule a workflow, just like you do with crontab. If you have a long build and need to have a pre-release you need to have a prepared test stage to check the operability - you can schedule a launch at night so that everything is ready by the morning.
+
+**Note:** at the beginning of each hour a lot of assemblies are started, so it is better to set any non-zero start minutes so that there are no delays to start at peak loads.
+
+```yaml
+on:
+  schedule:
+    - cron: '17 4 * * MON' # Runs at 04:17 UTC on Monday
+```
