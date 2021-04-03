@@ -6,11 +6,13 @@ A collection of useful snippets, all in one place.
 
 ## 📚 Contents
 
-* [Notes](#-notes)
+* [Tips](#-tips)
   * [Secrets](#secrets)
   * [Action options](#action-options)
+  * [Strict Error Mode (Shell)](#strict-error-mode-shell)
   * [Cache Dependencies](#cache-dependencies)
   * [Installing Dependencies in Node.js](#installing-dependencies-in-nodejs)
+  * [Marketplace Actions](#marketplace-actions)
 * [Snippets](#-snippets)
   * [Notify on Error](#notify-on-error)
   * [Commit History (aka Release Notes)](#commit-history-aka-release-notes)
@@ -19,7 +21,7 @@ A collection of useful snippets, all in one place.
   * [Publish Docker Image](#publish-docker-image)
   * [Check PR Title](#check-pr-title)
 
-## 📌 Notes
+## 📌 Tips
 
 ### Secrets
 
@@ -44,6 +46,22 @@ Each `action` from the marketplace contains an `action.yml` or `action.yaml` fil
 1. `inputs` – input parameters with their description and default values.
 2. `outputs` – names of variables through which action will return result.
 
+### Strict Error Mode (Shell)
+
+When using the `run` directive in steps – try to use the strict error control setting [`set -euo pipefail`](https://explainshell.com/explain?cmd=set+-euo+pipefail) on the first line.
+
+If you don't like this approach, at least use `shell: bash` in this step, since the [command shell](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#using-a-specific-shell) will be used when you start it:
+```shell
+bash --noprofile --norc -eo pipefail {0}
+```
+
+If these two directives are missing – the shell will be started without full strict error control (which can lead to unpredictable results in case of problems):
+```shell
+shell: /usr/bin/bash -e {0}
+```
+
+_Note_: this applies to Linux distributions.
+
 ### Cache Dependencies
 
 Always use caching of dependencies with [cache action](https://github.com/actions/cache) – this speeds up the execution of the workflow.
@@ -55,6 +73,12 @@ Look at the [usage examples](https://github.com/actions/cache/blob/main/examples
 In the githab workflow for projects using Node.js, always prefer install dependencies using command [`npm ci`](https://docs.npmjs.com/cli/v7/commands/npm-ci) rather than `npm install` – it speeds up execution time a lot.
 
 Together with dependency caching for large projects, you can achieve amazing acceleration. Be sure to read the documentation.
+
+### Marketplace Actions
+
+Try not to use actions that are not versioned and require a `master`/`main` version to be installed. This is at least unsafe and may cause your workflow to crash, in case of major changes.
+
+Many actions are not optimized and run a lot of stuff inside them (especially if they use a docker), which slows down the execution process. If you need to perform some trivial tasks that fit into a few commands, prefer to use your simple implementation, or at least make sure that the action won't be slower than you are allowed by the limits.
 
 ## 🛠 Snippets
 
@@ -84,7 +108,7 @@ Sending the commit history from a published release to Slack channel along with 
 1. Releases are published by setting a new tag.
 2. All tags must begin with the letter `v`.
 3. Tags must be named according to [semver](https://semver.org/).
-4. To get tags inside the workflow, you need to set `fetch-depth: 0` in the` actions/checkout` action.
+4. To get tags inside the workflow, you need to set `fetch-depth: 0` in the `actions/checkout` action.
 
 ```yaml
 on:
@@ -206,16 +230,6 @@ jobs:
 Fast check of PR title with reject/accept review and comment from bot using [linter](https://github.com/morrisoncole/pr-lint-action).
 ![Example](images/pr_title_lint.png)
 
-<details>
-<summary>Checking regex in the browser console (DevTools)</summary>
-
-```javascript
-r = new RegExp("^#\\d{1,}\\.");
-!r.test('#123: aa') && r.test('#1.') && !r.test('#12345678: abc') && !r.test('12345678: a') && !r.test('#12345678 a') && r.test('#12345678. a');
-// Output: true
-```
-</details>
-
 ```yaml
 name: Check PR title
 on:
@@ -234,3 +248,13 @@ jobs:
           on-failed-regex-comment: "Incorrect PR title. Must be a regex: `%regex%` (like: `#314. Task title`)"
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
 ```
+
+<details>
+<summary>Checking regex in the browser console (DevTools)</summary>
+
+```javascript
+r = new RegExp("^#\\d{1,}\\.");
+!r.test('#123: aa') && r.test('#1.') && !r.test('#12345678: abc') && !r.test('12345678: a') && !r.test('#12345678 a') && r.test('#12345678. a');
+// Output: true
+```
+</details>
