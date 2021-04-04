@@ -22,6 +22,7 @@ A collection of useful snippets, all in one place.
   * [Check PR Title](#check-pr-title)
   * [Extract Task ID from Branch Name](#extract-task-id-from-branch-name)
   * [Scheduled Events](#scheduled-events)
+  * [Trigger Workflow Outside of GitHub](#trigger-workflow-outside-of-github)
 
 ## 📌 Tips
 
@@ -294,4 +295,32 @@ You can schedule a workflow, just like you do with crontab. If you have a long b
 on:
   schedule:
     - cron: '17 4 * * MON' # Runs at 04:17 UTC on Monday
+```
+
+### Trigger Workflow Outside of GitHub
+
+If you need to start a workflow on some event from the outside with certain input data, then a special type of event has been invented for this – `repository_dispatch`.
+
+**Requirements:**
+1. Create a [personal token](https://github.com/settings/tokens) with `repo` [scopes](https://docs.github.com/en/developers/apps/scopes-for-oauth-apps#available-scopes).
+2. Replace the token `[TOKEN]` in the authorization header with the received token.
+3. Replace the repository owner `[OWNER]` in the request URL. For example: `yengoteam` for https://github.com/yengoteam/awesome-gha-snippets
+4. Replace the repository name `[REPO]` in the request URL. For example: `awesome-gha-snippets` for https://github.com/yengoteam/awesome-gha-snippets
+
+```yaml
+on:
+  repository_dispatch
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Payload
+        shell: bash
+        run: |
+          echo '${{ toJson(github.event.client_payload) }}'
+```
+
+_Example of a request to trigger:_
+```shell
+curl -v -X POST -H "Authorization: token [TOKEN]" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/[OWNER]/[REPO]/dispatches --data '{"event_type":"manually triggered","client_payload":{"msg":"Hello, world!"}}'
 ```
