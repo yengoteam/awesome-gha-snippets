@@ -41,7 +41,7 @@ https://github.com/organizations/[ORG_SLUG]/settings/secrets/actions
 
 If you add secrets in the organization, it is possible to manage accesses (`Repository access` –> `Selected repositories`) and quickly revoke/change if necessary for all repos.
 
-_Remark:_ You can painlessly move all the secrets from the repositories to the organization level, as their names do not change (but do not forget to remove the secrets from the repository settings).
+_Note:_ You can painlessly move all the secrets from the repositories to the organization level, as their names do not change (but do not forget to remove the secrets from the repository settings).
 
 ### Action options
 
@@ -73,13 +73,13 @@ Look at the [usage examples](https://github.com/actions/cache/blob/main/examples
 
 ### Installing Dependencies in Node.js
 
-In the githab workflow for projects using Node.js, always prefer install dependencies using command [`npm ci`](https://docs.npmjs.com/cli/v7/commands/npm-ci) rather than `npm install` – it speeds up execution time a lot.
+In the github workflow for projects using Node.js, always prefer install dependencies using command [`npm ci`](https://docs.npmjs.com/cli/v7/commands/npm-ci) rather than `npm install` – it speeds up execution time a lot.
 
-Together with dependency caching for large projects, you can achieve amazing acceleration. Be sure to read the documentation.
+Together with dependency caching for large projects, you can achieve amazing acceleration. Be sure to read the documentation about `npm ci`.
 
 ### Marketplace Actions
 
-Try not to use actions that are not versioned and require a `master`/`main` version to be installed. This is at least unsafe and may cause your workflow to crash, in case of major changes.
+Try not to use actions that are not versioned and require a `@master` or `@main` version to be installed. This is at least unsafe and may cause your workflow to crash, in case of major changes.
 
 Many actions are not optimized and run a lot of stuff inside them (especially if they use a docker), which slows down the execution process. If you need to perform some trivial tasks that fit into a few commands, prefer to use your simple implementation, or at least make sure that the action won't be slower than you are allowed by the limits.
 
@@ -87,7 +87,7 @@ Many actions are not optimized and run a lot of stuff inside them (especially if
 
 ### Notify on Error
 
-If the workflow crashes or is cancelled, a notification will be sent to Slack channel with the name of the repository and a link to the CI/CD log.
+If the workflow crashes or is cancelled, a notification will be sent to Slack channel with the name of the repository and a link to the workflow execution log.
 
 ```yaml
 jobs:
@@ -112,6 +112,7 @@ Sending the commit history from a published release to Slack channel along with 
 2. All tags must begin with the letter `v`.
 3. Tags must be named according to [semver](https://semver.org/).
 4. To get tags inside the workflow, you need to set `fetch-depth: 0` in the `actions/checkout` action.
+5. You must use a `Squash merge` (combine all commits from the head branch into a single commit in the base branch) in all PRs. You can disable other merge types in the repository settings with the `Merge button` configuration.
 
 ```yaml
 on:
@@ -142,7 +143,7 @@ jobs:
 
 With this method you can pass (transfer) variable values (output of some command) between steps.
 
-**Note:** it is better to encode the values using base64, so that if there are newlines in the output, nothing is lost.
+_Note:_ it is better to encode the values using base64, so that if there are newlines in the output, nothing is lost.
 
 ```yaml
 jobs:
@@ -165,11 +166,11 @@ jobs:
 
 ### Publish Package on PyPI
 
-After creating a new package release, you can automatically publish the new build in [Python Package Index](https://pypi.org/).
+After creating a new package release, you can automatically publish it in [Python Package Index](https://pypi.org/).
 
 **Requirements:**
 1. To start a workflow, you need to create a new release in the repository.
-2. In the secret keys, `PYPI_USERNAME` and `PYPI_PASSWORD` must be added for access to PyPI.
+2. `PYPI_USERNAME` and `PYPI_PASSWORD` must be added in the [secret keys](#secrets) for access to PyPI.
 
 ```yaml
 on:
@@ -206,7 +207,7 @@ After creating a new release, you can automatically add the image to the docker 
 1. To start a workflow, you need to create a new release in the repository.
 2. You need to change `[USERNAME_OR_ORG]` to the name of the profile or organization. For example: `textdatasetcleaner` for https://hub.docker.com/u/textdatasetcleaner
 3. You need to change `[IMAGE_NAME]` to repository (image name). For example: `tdc` for https://hub.docker.com/r/textdatasetcleaner/tdc
-4. In the secret keys, `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN` ([managing tokens](https://docs.docker.com/docker-hub/access-tokens/)) must be added for access to Docker Hub.
+4. `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN` (see [managing tokens](https://docs.docker.com/docker-hub/access-tokens/)) must be added in the [secret keys](#secrets) for access to Docker Hub.
 
 ```yaml
 on:
@@ -287,9 +288,9 @@ jobs:
 
 ### Scheduled Events
 
-You can schedule a workflow, just like you do with crontab. If you have a long build and need to have a pre-release you need to have a prepared test stage to check the operability - you can schedule a launch at night so that everything is ready by the morning.
+You can schedule a workflow, just like you do with crontab. If you have a long build and need to have a pre-release for a prepared test stage to check the operability - you can schedule a launch at night so that everything is ready by the morning.
 
-**Note:** at the beginning of each hour a lot of GitHub Actions workflow are started, so it is better to set any non-zero start minutes so that there are no delays to start at peak loads.
+_Note:_ at the beginning of each hour a lot of GitHub Action workflows are started, so it is better to set any non-zero start minutes so that there are no delays to start at peak loads.
 
 ```yaml
 on:
@@ -320,7 +321,7 @@ jobs:
           echo '${{ toJson(github.event.client_payload) }}'
 ```
 
-_Example of a request to trigger:_
+Example of a request to trigger:
 ```shell
 curl -v -X POST -H "Authorization: token [TOKEN]" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/[OWNER]/[REPO]/dispatches --data '{"event_type":"manually triggered","client_payload":{"msg":"Hello, world!"}}'
 ```
